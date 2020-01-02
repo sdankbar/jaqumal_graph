@@ -8,8 +8,6 @@ Java 8 or newer and uses Maven to build
 See pom.xml for details of the Java libraries used
 
 * Jaqumal
-* Apache Commons-Lang
-* Apache Commons-Math
 * Guava
 * JUnit4
 * Log4j2

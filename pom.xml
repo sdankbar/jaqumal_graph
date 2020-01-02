@@ -56,8 +56,8 @@
 
 		<guava.version>28.0-jre</guava.version>
 
-		<commons.lang.version>3.9</commons.lang.version>
-		<commons.math.version>3.6.1</commons.math.version>
+		<jaqumal.version>0.5-SNAPSHOT</jaqumal.version>
+
 		<log4j.version>2.12.0</log4j.version>
 		<junit.version>4.12</junit.version>
 
@@ -70,22 +70,12 @@
 			<dependency>
 				<groupId>com.github.sdankbar.jaqumal</groupId>
 				<artifactId>library</artifactId>
-				<version>0.5-SNAPSHOT</version>
+				<version>${jaqumal.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.google.guava</groupId>
 				<artifactId>guava</artifactId>
 				<version>${guava.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-lang3</artifactId>
-				<version>${commons.lang.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.commons</groupId>
-				<artifactId>commons-math3</artifactId>
-				<version>${commons.math.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
