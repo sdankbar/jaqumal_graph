@@ -1,29 +1,7 @@
-/**
- * The MIT License
- * Copyright © 2020 Stephen Dankbar
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 
 /**
  * The MIT License
- * Copyright © 2019 Stephen Dankbar
+ * Copyright © 2020 Stephen Dankbar
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -106,12 +84,21 @@ Window {
             model: test_edges
             delegate: JPolyline {
                 property bool tailSelected: model.tail_id === selectedNode
+                property bool headSelected: model.head_id === selectedNode
 
                 anchors.fill: parent
                 polyline: model.polyline
 
-                shapePath.strokeColor: tailSelected ? "red" : "black"
-                shapePath.strokeWidth: tailSelected ? 4 : 2
+                shapePath.strokeColor: {
+                    if (tailSelected) {
+                        return "red"
+                    } else if (headSelected) {
+                        return "blue"
+                    } else {
+                        return "black"
+                    }
+                }
+                shapePath.strokeWidth: (tailSelected || headSelected) ? 4 : 2
                 shapePath.joinStyle: ShapePath.RoundJoin
                 shapePath.capStyle: ShapePath.RoundCap
                 shapePath.fillColor: "transparent"

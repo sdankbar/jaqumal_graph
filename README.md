@@ -44,4 +44,4 @@ Start by creating a JQMLApplication.  Then create a GraphModel by using one of t
 
 ##### Simple Graph
 
-Renders a 6 vertex graph that contains cycles.  Mouse presses on a Vertex will highlight that Vertex and all edges leading away from that Vertex.
+Renders a 6 vertex graph that contains cycles.  Mouse presses on a Vertex will highlight that Vertex and all edges connected to that Vertex.
