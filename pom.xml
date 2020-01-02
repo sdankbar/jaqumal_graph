@@ -29,11 +29,11 @@
 
 	<groupId>com.github.sdankbar.jaqumal_graph</groupId>
 	<artifactId>parent</artifactId>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.5-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Jaqumal Graph</name>
-	<description>Graph visualization library that uses Jaqumal</description>
+	<description>Graph visualization library using Jaqumal</description>
 	<url>https://github.com/sdankbar/jaqumal_graph</url>
 	<licenses>
 		<license>
@@ -130,17 +130,7 @@
 						<exclude>**/README</exclude>
 						<exclude>**/LICENSE</exclude>
 						<exclude>**/*.qmlc</exclude>
-						<exclude>**/Makefile</exclude>
 						<exclude>**/*.user</exclude>
-						<exclude>**/*.o</exclude>
-						<exclude>**/qmldir</exclude>
-						<exclude>**/*.qrc</exclude>
-						<exclude>**/colors.txt</exclude>
-						<exclude>**/lib*.so*</exclude>
-						<exclude>**/.qmake.stash</exclude>
-						<exclude>**/moc_*.cpp</exclude>
-						<exclude>**/moc_*.h</exclude>
-						<exclude>**/qrc_jaqumal.cpp</exclude>
 					</excludes>
 				</configuration>
 

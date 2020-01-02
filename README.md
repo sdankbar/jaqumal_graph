@@ -1,4 +1,4 @@
-# jaqumal_graph
+# Jaqumal Graph
 Graph visualization library using Jaqumal
 
 # Dependencies
