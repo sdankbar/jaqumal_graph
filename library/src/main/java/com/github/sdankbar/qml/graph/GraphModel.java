@@ -36,6 +36,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.apache.commons.lang3.SystemUtils;
+
 import com.github.sdankbar.qml.JQMLModelFactory;
 import com.github.sdankbar.qml.JVariant;
 import com.github.sdankbar.qml.graph.parsing.EdgeDefinition;
@@ -111,7 +113,11 @@ public class GraphModel<K> {
 		// dot command
 		// plain output format
 		// invert y coordinates, (0, 0) is top left.
-		builder.command("dot", "-Tplain", "-y");
+		if (SystemUtils.IS_OS_WINDOWS) {
+			builder.command("dot.exe", "-Tplain", "-y");
+		} else {
+			builder.command("dot", "-Tplain", "-y");
+		}
 		try {
 			final Process p = builder.start();
 
