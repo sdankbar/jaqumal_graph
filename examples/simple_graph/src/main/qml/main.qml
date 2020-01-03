@@ -21,12 +21,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import QtQuick 2.10
-import QtQuick.Window 2.10
-import QtQuick.Controls 2.11
-import QtQuick.Controls.Styles 1.4
-import QtGraphicalEffects 1.0
-import QtQuick.Shapes 1.8
+import QtQuick 2.11
+import QtQuick.Window 2.11
+import QtQuick.Controls 2.4
+import QtQuick.Shapes 1.11
 import com.github.sdankbar.jaqumal 0.4
 
 Window {
@@ -35,7 +33,7 @@ Window {
     height: 500
     x: 100
     y: 100
-    title: qsTr("Simple Graph")
+    title: "Simple Graph"
 
     property string selectedNode: ""
 
