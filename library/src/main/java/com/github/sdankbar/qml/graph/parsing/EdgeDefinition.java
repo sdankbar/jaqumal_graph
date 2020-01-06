@@ -62,7 +62,7 @@ public class EdgeDefinition {
 			final int n = Integer.parseInt(tokens[3]);
 			Preconditions.checkArgument(tokens.length == 4 + 2 * n + 2, "Unexpected number of tokens on line=", line);
 
-			final ImmutableList.Builder<Point2D> builder = ImmutableList.builderWithExpectedSize(n);
+			final ImmutableList.Builder<Point2D> builder = ImmutableList.builder();
 			for (int i = 0; i < n; ++i) {
 				final double x = dpi * Double.parseDouble(tokens[4 + 2 * i]);
 				final double y = dpi * Double.parseDouble(tokens[4 + 2 * i + 1]);

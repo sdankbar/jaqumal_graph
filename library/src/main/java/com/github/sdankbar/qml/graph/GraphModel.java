@@ -226,7 +226,7 @@ public class GraphModel<K> {
 
 			for (final EdgeDefinition e : edges) {
 				final ImmutableList<Point2D> polyline = e.getPolyLine();
-				final ImmutableMap.Builder<EdgeKey, JVariant> builder = ImmutableMap.builderWithExpectedSize(3);
+				final ImmutableMap.Builder<EdgeKey, JVariant> builder = ImmutableMap.builder();
 				builder.put(EdgeKey.polyline, new JVariant(polyline));
 				builder.put(EdgeKey.head_id, new JVariant(e.getHeadUUID()));
 				builder.put(EdgeKey.tail_id, new JVariant(e.getTailUUID()));
