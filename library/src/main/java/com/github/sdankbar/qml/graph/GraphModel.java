@@ -136,7 +136,7 @@ public class GraphModel<K> {
 
 			return plainFormat.toString();
 		} catch (final IOException e) {
-			return "";
+			throw new IllegalStateException("Failed to find \"dot\" utility", e);
 		}
 	}
 
