@@ -42,24 +42,13 @@ import com.google.common.collect.ImmutableList;
  */
 public class Vertex<K> {
 
-	private static final JVariant ZERO_VARIANT = new JVariant(0);
-	private static final JVariant ONE_VARIANT = new JVariant(1);
-
-	private static String getIDAsGraphVizIDString(final long uuid) {
-		final String oct = Long.toOctalString(uuid);
-		// '0' == 48, map to 65 = 'A'
-		// '7' == 55, map to 72 = 'H'
-		return oct.chars().map(c -> (char) (c + 17))
-				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
-	}
-
 	private static JVariant toPixels(final double inches, final double dpi) {
 		return new JVariant(inches * dpi);
 	}
 
 	private final String uuid;
 
-	private final GraphModel<K> graph;
+	private GraphModel<K> graph;
 	private final Set<Vertex<K>> children = new HashSet<>();
 
 	private final Set<Vertex<K>> parents = new HashSet<>();
@@ -69,16 +58,11 @@ public class Vertex<K> {
 	private double vertexWidthInches = 1;
 	private double vertexHeightInches = 1;
 
-	Vertex(final long uuid, final double widthInches, final double heightInches, final GraphModel<K> graph,
+	Vertex(final String uuid, final double widthInches, final double heightInches, final GraphModel<K> graph,
 			final Map<String, JVariant> qmlModelMap) {
-		this.uuid = getIDAsGraphVizIDString(uuid);
+		this.uuid = Objects.requireNonNull(uuid, "uuid is null");
 		this.graph = Objects.requireNonNull(graph, "graph is null");
 		this.qmlModelMap = Objects.requireNonNull(qmlModelMap, "qmlModelMap is null");
-		this.qmlModelMap.put(VertexKey.id.toString(), new JVariant(this.uuid));
-		this.qmlModelMap.put(VertexKey.x.toString(), ZERO_VARIANT);
-		this.qmlModelMap.put(VertexKey.y.toString(), ZERO_VARIANT);
-		this.qmlModelMap.put(VertexKey.width.toString(), ONE_VARIANT);
-		this.qmlModelMap.put(VertexKey.height.toString(), ONE_VARIANT);
 		setVertexSizeDimensionInches(widthInches, heightInches);
 	}
 
@@ -89,9 +73,13 @@ public class Vertex<K> {
 	 *
 	 * @throws IllegalArgumentException Thrown if v is not part of the same
 	 *                                  GraphModel as this.
+	 * @throws IllegalStateException    Thrown if this function is called after the
+	 *                                  Vertex has been removed from its parent
+	 *                                  GraphModel.
 	 */
 	public void addChild(final Vertex<K> v) {
 		Objects.requireNonNull(v, "v is null");
+		checkIsAttachedToGraph();
 		Preconditions.checkArgument(v.graph == graph, "v is not from the same GraphModel as this Vertex");
 		children.add(v);
 		v.addParent(this);
@@ -108,19 +96,33 @@ public class Vertex<K> {
 		qmlModelMap.put(VertexKey.height.toString(), toPixels(def.getHeight(), dpi));
 	}
 
+	private void checkIsAttachedToGraph() {
+		if (graph == null) {
+			throw new IllegalStateException("Vertex was removed from its parent graph");
+		}
+	}
+
 	/**
 	 * @param key Key to lookup the value for.
 	 * @return The value for the key.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public Optional<JVariant> get(final K key) {
 		Objects.requireNonNull(key, "key is null");
+		checkIsAttachedToGraph();
 		return Optional.ofNullable(qmlModelMap.get(key.toString()));
 	}
 
 	/**
 	 * @return a list of this Vertex's children.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public ImmutableList<Vertex<K>> getChildren() {
+		checkIsAttachedToGraph();
 		return ImmutableList.copyOf(children);
 	}
 
@@ -159,8 +161,12 @@ public class Vertex<K> {
 	/**
 	 * @return The height of this Vertex in pixels. Undefined if GraphModel's
 	 *         layout() has not been called yet.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public int getHeight() {
+		checkIsAttachedToGraph();
 		return qmlModelMap.get(VertexKey.height.toString()).asInteger();
 	}
 
@@ -179,38 +185,64 @@ public class Vertex<K> {
 	/**
 	 * @return The width of this Vertex in pixels. Undefined if GraphModel's
 	 *         layout() has not been called yet.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public int getWidth() {
+		checkIsAttachedToGraph();
 		return qmlModelMap.get(VertexKey.width.toString()).asInteger();
 	}
 
 	/**
 	 * @return The X coordinate of the vertex's top left corner. Undefined if
 	 *         GraphModel's layout() has not been called yet.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public int getX() {
+		checkIsAttachedToGraph();
 		return qmlModelMap.get(VertexKey.x.toString()).asInteger();
 	}
 
 	/**
 	 * @return The Y coordinate of the vertex's top left corner. Undefined if
 	 *         GraphModel's layout() has not been called yet.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	int getY() {
+		checkIsAttachedToGraph();
 		return qmlModelMap.get(VertexKey.y.toString()).asInteger();
+	}
+
+	void invalidate() {
+		graph = null;
+		children.clear();
+		parents.clear();
 	}
 
 	/**
 	 * @return True if this Vertex is a leaf. A leaf vertex has no children.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public boolean isLeaf() {
+		checkIsAttachedToGraph();
 		return children.isEmpty();
 	}
 
 	/**
 	 * @return True if this Vertex is a root. A root vertex has no parent.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public boolean isRoot() {
+		checkIsAttachedToGraph();
 		return parents.isEmpty();
 	}
 
@@ -219,8 +251,12 @@ public class Vertex<K> {
 	 *
 	 * @param key   Name/Role for the data.
 	 * @param value The new value.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public void put(final K key, final JVariant value) {
+		checkIsAttachedToGraph();
 		Objects.requireNonNull(key, "key is null");
 		Objects.requireNonNull(value, "value is null");
 		qmlModelMap.put(key.toString(), value);
@@ -231,8 +267,12 @@ public class Vertex<K> {
 	 *
 	 * @param key Name/Role to remove.
 	 * @return True if data was removed.
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public boolean remove(final K key) {
+		checkIsAttachedToGraph();
 		Objects.requireNonNull(key, "key is null");
 		return qmlModelMap.remove(key.toString()) != null;
 	}
@@ -245,9 +285,13 @@ public class Vertex<K> {
 	 *
 	 * @throws IllegalArgumentException Thrown if removed is not part of the same
 	 *                                  GraphModel as this.
+	 * @throws IllegalStateException    Thrown if this function is called after the
+	 *                                  Vertex has been removed from its parent
+	 *                                  GraphModel.
 	 */
 	public boolean removeChild(final Vertex<K> removed) {
 		Objects.requireNonNull(removed, "removed is null");
+		checkIsAttachedToGraph();
 		Preconditions.checkArgument(removed.graph == graph, "v is not from the same GraphModel as this Vertex");
 		if (children.remove(removed)) {
 			removeParent(this);
@@ -266,10 +310,15 @@ public class Vertex<K> {
 	 *
 	 * @param w Width of this Vertex in inches.
 	 * @param h Height of this Vertex in inches.
+	 *
+	 * @throws IllegalStateException Thrown if this function is called after the
+	 *                               Vertex has been removed from its parent
+	 *                               GraphModel.
 	 */
 	public void setVertexSizeDimensionInches(final double w, final double h) {
 		Preconditions.checkArgument(w > 0, "w <= 0 ", Double.valueOf(w));
 		Preconditions.checkArgument(h > 0, "h <= 0 ", Double.valueOf(h));
+		checkIsAttachedToGraph();
 		vertexWidthInches = w;
 		vertexHeightInches = h;
 	}
@@ -279,9 +328,13 @@ public class Vertex<K> {
 	 */
 	@Override
 	public String toString() {
-		return "Vertex [uuid=" + uuid + ", graph=" + graph + ", children=" + children + ", parents=" + parents
-				+ ", qmlModelMap=" + qmlModelMap + ", vertexWidthInches=" + vertexWidthInches + ", vertexHeightInches="
-				+ vertexHeightInches + "]";
+		if (graph != null) {
+			return "Vertex [uuid=" + uuid + ", graph=" + graph + ", children=" + children + ", parents=" + parents
+					+ ", qmlModelMap=" + qmlModelMap + ", vertexWidthInches=" + vertexWidthInches
+					+ ", vertexHeightInches=" + vertexHeightInches + "]";
+		} else {
+			return "Vertex [uuid=" + uuid + "]";
+		}
 	}
 
 }

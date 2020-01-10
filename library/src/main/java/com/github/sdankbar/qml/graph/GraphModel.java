@@ -33,6 +33,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -67,6 +68,9 @@ import com.google.common.collect.ImmutableSet;
  *        QML identifiers.
  */
 public class GraphModel<K> {
+
+	private static final JVariant ZERO_VARIANT = new JVariant(0);
+	private static final JVariant ONE_VARIANT = new JVariant(1);
 
 	/**
 	 * Create a new GraphModel using an Enum as the user define role type.
@@ -106,6 +110,14 @@ public class GraphModel<K> {
 		final ImmutableSet<String> stringKeySet = keySet.stream().map(k -> k.toString())
 				.collect(ImmutableSet.toImmutableSet());
 		return new GraphModel<>(modelPrefix, factory, stringKeySet, dpi);
+	}
+
+	private static String getIDAsGraphVizIDString(final long uuid) {
+		final String oct = Long.toOctalString(uuid);
+		// '0' == 48, map to 65 = 'A'
+		// '7' == 55, map to 72 = 'H'
+		return oct.chars().map(c -> (char) (c + 17))
+				.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
 	}
 
 	private static String runGraphViz(final String graphDef) {
@@ -169,13 +181,63 @@ public class GraphModel<K> {
 	}
 
 	/**
+	 * Remove all vertices from the graph.
+	 */
+	public void clear() {
+		vertexModel.clear();
+		edgeModel.clear();
+
+		for (final Vertex<K> v : vertices) {
+			v.invalidate();
+		}
+		vertices.clear();
+	}
+
+	/**
 	 * @param widthInches  Width of the new Vertex in inches.
 	 * @param heightInches Height of the new Vertex in inches.
 	 * @return Newly created Vertex in this graph.
 	 */
 	public Vertex<K> createVertex(final double widthInches, final double heightInches) {
-		final Map<String, JVariant> map = vertexModel.add(ImmutableMap.of());
-		final Vertex<K> v = new Vertex<>(++nextUUID, widthInches, heightInches, this, map);
+		final ImmutableMap.Builder<String, JVariant> builder = ImmutableMap.builder();
+
+		final String uuid = getIDAsGraphVizIDString(++nextUUID);
+		builder.put(VertexKey.id.toString(), new JVariant(uuid));
+		builder.put(VertexKey.x.toString(), ZERO_VARIANT);
+		builder.put(VertexKey.y.toString(), ZERO_VARIANT);
+		builder.put(VertexKey.width.toString(), ONE_VARIANT);
+		builder.put(VertexKey.height.toString(), ONE_VARIANT);
+
+		final Map<String, JVariant> map = vertexModel.add(builder.build());
+		final Vertex<K> v = new Vertex<>(uuid, widthInches, heightInches, this, map);
+		vertices.add(v);
+		return v;
+	}
+
+	/**
+	 * @param widthInches  Width of the new Vertex in inches.
+	 * @param heightInches Height of the new Vertex in inches.
+	 * @param initialData  Data to initially populate the Vertex with
+	 * @return Newly created Vertex in this graph.
+	 */
+	public Vertex<K> createVertex(final double widthInches, final double heightInches,
+			final ImmutableMap<K, JVariant> initialData) {
+		Objects.requireNonNull(initialData, "initialData is null");
+
+		final ImmutableMap.Builder<String, JVariant> builder = ImmutableMap.builder();
+
+		final String uuid = getIDAsGraphVizIDString(++nextUUID);
+		builder.put(VertexKey.id.toString(), new JVariant(uuid));
+		builder.put(VertexKey.x.toString(), ZERO_VARIANT);
+		builder.put(VertexKey.y.toString(), ZERO_VARIANT);
+		builder.put(VertexKey.width.toString(), ONE_VARIANT);
+		builder.put(VertexKey.height.toString(), ONE_VARIANT);
+		for (final Entry<K, JVariant> entry : initialData.entrySet()) {
+			builder.put(entry.getKey().toString(), entry.getValue());
+		}
+
+		final Map<String, JVariant> map = vertexModel.add(builder.build());
+		final Vertex<K> v = new Vertex<>(uuid, widthInches, heightInches, this, map);
 		vertices.add(v);
 		return v;
 	}
@@ -250,7 +312,13 @@ public class GraphModel<K> {
 				break;
 			}
 		}
-		return vertices.remove(removed);
+
+		if (vertices.remove(removed)) {
+			removed.invalidate();
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 }
