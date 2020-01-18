@@ -46,7 +46,7 @@ public class EdgeDefinition {
 		}
 	}
 
-	private static double MIN_INTERPOLATION_DISTANCE = 1.0;
+	private static double MIN_INTERPOLATION_DISTANCE = 10 * 10;
 	private static double arrowLengthInches = 0.125;
 	private static final double COSINE = Math.cos(Math.toRadians(30));
 
