@@ -22,7 +22,10 @@
  */
 package com.github.sdankbar.qml.graph.parsing;
 
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.github.sdankbar.qml.graph.splines.BSpline;
 import com.google.common.base.Preconditions;
@@ -33,13 +36,37 @@ import com.google.common.collect.ImmutableList;
  */
 public class EdgeDefinition {
 
+	private static class InterpolatedPoint {
+		private final double n;
+		private final Point2D p;
+
+		public InterpolatedPoint(final double n, final Point2D p) {
+			this.n = n;
+			this.p = p;
+		}
+	}
+
+	private static double MIN_INTERPOLATION_DISTANCE = 1.0;
 	private static double arrowLengthInches = 0.125;
-
 	private static final double COSINE = Math.cos(Math.toRadians(30));
-	private static final double SINE = Math.sin(Math.toRadians(30));
 
+	private static final double SINE = Math.sin(Math.toRadians(30));
 	private static final double COSINE_NEG = Math.cos(Math.toRadians(-30));
+
 	private static final double SINE_NEG = Math.sin(Math.toRadians(-30));
+
+	private static boolean needsAdditionalPoints(final Point2D p1, final Point2D p2, final Point2D p3) {
+		final Line2D l = new Line2D.Double(p1, p3);
+		if (l.ptLineDist(p2) < 0.5) {
+			return false;
+		} else if (p1.distanceSq(p2) > MIN_INTERPOLATION_DISTANCE) {
+			return true;
+		} else if (p2.distanceSq(p3) > MIN_INTERPOLATION_DISTANCE) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 
 	private final double dpi;
 	private final BSpline spline;
@@ -74,6 +101,17 @@ public class EdgeDefinition {
 		}
 	}
 
+	private void evaluateSpline(final double s, final double e, final Point2D sPoint, final Point2D ePoint,
+			final List<InterpolatedPoint> working) {
+		final double middle = (s + e) / 2;
+		final Point2D middlePoint = spline.evaluate(middle);
+		working.add(new InterpolatedPoint(middle, middlePoint));
+		if (needsAdditionalPoints(sPoint, middlePoint, ePoint)) {
+			evaluateSpline(s, middle, sPoint, middlePoint, working);
+			evaluateSpline(middle, e, middlePoint, ePoint, working);
+		}
+	}
+
 	/**
 	 * @return the headUUID
 	 */
@@ -86,18 +124,22 @@ public class EdgeDefinition {
 	 *         head.
 	 */
 	public ImmutableList<Point2D> getPolyLine() {
+		final List<InterpolatedPoint> tempList = new ArrayList<>();
+
+		tempList.add(new InterpolatedPoint(0.0, spline.evaluate(0.0)));
+		tempList.add(new InterpolatedPoint(1.0, spline.evaluate(1.0)));
+
+		evaluateSpline(0.0, 1.0, tempList.get(0).p, tempList.get(1).p, tempList);
+
+		tempList.sort((l, r) -> Double.compare(l.n, r.n));
+
+		final Point2D secondToLastPoint = tempList.get(tempList.size() - 2).p;
+		final Point2D lastPoint = tempList.get(tempList.size() - 1).p;
+
 		final ImmutableList.Builder<Point2D> builder = ImmutableList.builder();
-
-		final double[] tArray = { 0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0 };
-		Point2D secondToLastPoint = null;
-		Point2D lastPoint = null;
-		for (final double t : tArray) {
-			final Point2D p = spline.evaluate(t);
-			builder.add(p);
-			secondToLastPoint = lastPoint;
-			lastPoint = p;
+		for (final InterpolatedPoint inter : tempList) {
+			builder.add(inter.p);
 		}
-
 		if (secondToLastPoint != null && lastPoint != null) {
 			final double arrowLength = arrowLengthInches * dpi;
 
