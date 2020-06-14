@@ -85,6 +85,28 @@ public class Vertex<K> {
 		v.addParent(this);
 	}
 
+	void addGraphVizEdgeDefinition(final StringBuilder builder) {
+		if (!children.isEmpty()) {
+			builder.append(uuid);
+			builder.append(" -> {");
+
+			builder.append(children.stream().map(c -> c.uuid).collect(Collectors.joining(", ")));
+
+			// arrowhead=none so that the last point of the returned spline touches the
+			// vertex the edge ends on.
+			builder.append("} [arrowhead=none]");
+		}
+	}
+
+	void addGraphVizNodeDefinition(final StringBuilder builder) {
+		builder.append(uuid);
+		builder.append(" [width=");
+		builder.append(vertexWidthInches);
+		builder.append(" height=");
+		builder.append(vertexHeightInches);
+		builder.append(" shape=box]");
+	}
+
 	private void addParent(final Vertex<K> parent) {
 		parents.add(parent);
 	}
@@ -124,38 +146,6 @@ public class Vertex<K> {
 	public ImmutableList<Vertex<K>> getChildren() {
 		checkIsAttachedToGraph();
 		return ImmutableList.copyOf(children);
-	}
-
-	String getGraphVizEdgeDefinition() {
-		final StringBuilder builder = new StringBuilder();
-
-		if (!children.isEmpty()) {
-
-			builder.append(uuid);
-			builder.append(" -> {");
-
-			builder.append(children.stream().map(c -> c.uuid).collect(Collectors.joining(", ")));
-
-			// arrowhead=none so that the last point of the returned spline touchs the
-			// vertex the edge ends on.
-			builder.append("} [arrowhead=none]");
-		}
-
-		return builder.toString();
-	}
-
-	String getGraphVizNodeDefinition() {
-		final StringBuilder builder = new StringBuilder();
-		builder.append(uuid);
-		builder.append(" [");
-		builder.append("width=");
-		builder.append(vertexWidthInches);
-		builder.append(" height=");
-		builder.append(vertexHeightInches);
-		builder.append(" shape=box");
-		builder.append("]");
-
-		return builder.toString();
 	}
 
 	/**

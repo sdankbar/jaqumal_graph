@@ -36,6 +36,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.apache.commons.lang3.SystemUtils;
 
@@ -71,6 +74,8 @@ public class GraphModel<K> {
 
 	private static final JVariant ZERO_VARIANT = new JVariant(0);
 	private static final JVariant ONE_VARIANT = new JVariant(1);
+
+	private static final ExecutorService LAYOUT_EXEC = Executors.newSingleThreadExecutor();
 
 	/**
 	 * Create a new GraphModel using an Enum as the user define role type.
@@ -169,6 +174,8 @@ public class GraphModel<K> {
 		this.dpi = dpi;
 
 		singletonModel = factory.createSingletonModel(modelPrefix + "_graph", GraphKey.class);
+		singletonModel.put(GraphKey.width, new JVariant(dpi));
+		singletonModel.put(GraphKey.height, new JVariant(dpi));
 
 		final ImmutableSet<String> builtInKeys = EnumSet.allOf(VertexKey.class).stream().map(e -> e.name())
 				.collect(ImmutableSet.toImmutableSet());
@@ -178,6 +185,30 @@ public class GraphModel<K> {
 		keys.addAll(userKeys);
 		vertexModel = factory.createListModel(modelPrefix + "_vertices", keys);
 		edgeModel = factory.createListModel(modelPrefix + "_edges", EdgeKey.class);
+	}
+
+	private void applyGraphVizOutput(final GraphVizParser parser) {
+		singletonModel.put(GraphKey.width, new JVariant(parser.getGraphWidthInches() * dpi));
+		singletonModel.put(GraphKey.height, new JVariant(parser.getGraphHeightInches() * dpi));
+
+		for (final Vertex<K> b : vertices) {
+			b.apply(parser.getNode(b.getUUID()), dpi);
+		}
+
+		// Add edges
+		edgeModel.clear();
+		for (final Vertex<K> b : vertices) {
+			final List<EdgeDefinition> edges = parser.getEdges(b.getUUID());
+
+			for (final EdgeDefinition e : edges) {
+				final ImmutableList<Point2D> polyline = e.getPolyLine();
+				final ImmutableMap.Builder<EdgeKey, JVariant> builder = ImmutableMap.builder();
+				builder.put(EdgeKey.polyline, new JVariant(polyline));
+				builder.put(EdgeKey.head_id, new JVariant(e.getHeadUUID()));
+				builder.put(EdgeKey.tail_id, new JVariant(e.getTailUUID()));
+				edgeModel.add(builder.build());
+			}
+		}
 	}
 
 	/**
@@ -243,7 +274,7 @@ public class GraphModel<K> {
 	}
 
 	private String getGraphVizDOTFormat() {
-		final StringBuilder builder = new StringBuilder();
+		final StringBuilder builder = new StringBuilder(vertices.size() * 64);
 
 		final String newLine = System.lineSeparator();
 
@@ -251,9 +282,9 @@ public class GraphModel<K> {
 		builder.append(newLine);
 
 		for (final Vertex<K> v : vertices) {
-			builder.append(v.getGraphVizNodeDefinition());
+			v.addGraphVizNodeDefinition(builder);
 			builder.append(newLine);
-			builder.append(v.getGraphVizEdgeDefinition());
+			v.addGraphVizEdgeDefinition(builder);
 			builder.append(newLine);
 		}
 
@@ -265,36 +296,34 @@ public class GraphModel<K> {
 	/**
 	 * Lays out the graph, sending the updated layout data to QML. Must be called
 	 * after changing the structure of the graph in order for those changes to be
-	 * applied.
+	 * applied. Call blocks until data is updated.
 	 */
 	public void layoutGraph() {
 		final String graphVizFormat = getGraphVizDOTFormat();
+		final GraphVizParser parser = new GraphVizParser(runGraphViz(graphVizFormat), dpi);
 
-		final String graphVizOutput = runGraphViz(graphVizFormat);
+		applyGraphVizOutput(parser);
+	}
 
-		final GraphVizParser parser = new GraphVizParser(graphVizOutput, dpi);
+	/**
+	 * Lays out the graph, sending the updated layout data to QML. Must be called
+	 * after changing the structure of the graph in order for those changes to be
+	 * applied. Call returns immediately and data is updated on the provided
+	 * executor. Provide executor must be the QML Thread executor.
+	 *
+	 * @param qmlThreadExecutor The QML Thread executor. Used to update the models
+	 *                          once the layout is complete.
+	 * @return CompletableFuture that completes once the models are updated.
+	 */
+	public CompletableFuture<Void> layoutGraphAsync(final ExecutorService qmlThreadExecutor) {
+		Objects.requireNonNull(qmlThreadExecutor, "qmlTheadExecutor is null");
 
-		singletonModel.put(GraphKey.width, new JVariant(parser.getGraphWidthInches() * dpi));
-		singletonModel.put(GraphKey.height, new JVariant(parser.getGraphHeightInches() * dpi));
+		final String graphVizFormat = getGraphVizDOTFormat();
 
-		for (final Vertex<K> b : vertices) {
-			b.apply(parser.getNode(b.getUUID()), dpi);
-		}
+		final CompletableFuture<GraphVizParser> future = CompletableFuture
+				.supplyAsync(() -> new GraphVizParser(runGraphViz(graphVizFormat), dpi), LAYOUT_EXEC);
 
-		// Add edges
-		edgeModel.clear();
-		for (final Vertex<K> b : vertices) {
-			final List<EdgeDefinition> edges = parser.getEdges(b.getUUID());
-
-			for (final EdgeDefinition e : edges) {
-				final ImmutableList<Point2D> polyline = e.getPolyLine();
-				final ImmutableMap.Builder<EdgeKey, JVariant> builder = ImmutableMap.builder();
-				builder.put(EdgeKey.polyline, new JVariant(polyline));
-				builder.put(EdgeKey.head_id, new JVariant(e.getHeadUUID()));
-				builder.put(EdgeKey.tail_id, new JVariant(e.getTailUUID()));
-				edgeModel.add(builder.build());
-			}
-		}
+		return future.thenAcceptAsync(parser -> applyGraphVizOutput(parser), qmlThreadExecutor);
 	}
 
 	/**

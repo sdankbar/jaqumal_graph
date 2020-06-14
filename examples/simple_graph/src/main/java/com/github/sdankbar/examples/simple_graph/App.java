@@ -85,10 +85,14 @@ public class App {
 		v3.addChild(v6);
 		v5.addChild(v6);
 
-		model.layoutGraph();
+		final long start = System.currentTimeMillis();
+		model.layoutGraphAsync(app.getQMLThreadExecutor()).thenAccept(
+				(v) -> System.out.println("Took " + (System.currentTimeMillis() - start) + " milliseconds"));
 
 		app.loadAndWatchQMLFile("./src/main/qml/main.qml");
 
 		app.execute();
+
+		System.exit(0);
 	}
 }
