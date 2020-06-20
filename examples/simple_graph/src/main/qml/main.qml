@@ -87,7 +87,7 @@ Window {
                 anchors.fill: parent
                 polyline: model.polyline
 
-                shapePath.strokeColor: {
+                strokeColor: {
                     if (tailSelected) {
                         return "red"
                     } else if (headSelected) {
@@ -96,10 +96,9 @@ Window {
                         return "black"
                     }
                 }
-                shapePath.strokeWidth: (tailSelected || headSelected) ? 4 : 2
-                shapePath.joinStyle: ShapePath.RoundJoin
-                shapePath.capStyle: ShapePath.RoundCap
-                shapePath.fillColor: "transparent"
+                strokeWidth: (tailSelected || headSelected) ? 4 : 2
+                //shapePath.joinStyle: ShapePath.RoundJoin
+                //shapePath.capStyle: ShapePath.RoundCap
             }
         }
     }
