@@ -41,6 +41,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.lang3.SystemUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.sdankbar.qml.JQMLModelFactory;
 import com.github.sdankbar.qml.JVariant;
@@ -75,6 +77,7 @@ public class GraphModel<K> {
 	private static final JVariant ZERO_VARIANT = new JVariant(0);
 	private static final JVariant ONE_VARIANT = new JVariant(1);
 
+	private static final Logger log = LoggerFactory.getLogger(GraphModel.class);
 	private static final ExecutorService LAYOUT_EXEC = Executors.newSingleThreadExecutor();
 
 	/**
@@ -153,7 +156,8 @@ public class GraphModel<K> {
 
 			return plainFormat.toString();
 		} catch (final IOException e) {
-			throw new IllegalStateException("Failed to find \"dot\" utility", e);
+			log.error("Failed to run \"dot\" utility.  Check that it is installed and on the PATH.", e);
+			throw new IllegalStateException("Failed to run \"dot\" utility", e);
 		}
 	}
 
