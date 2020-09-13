@@ -48,6 +48,7 @@ import com.github.sdankbar.qml.JQMLModelFactory;
 import com.github.sdankbar.qml.JVariant;
 import com.github.sdankbar.qml.graph.parsing.EdgeDefinition;
 import com.github.sdankbar.qml.graph.parsing.GraphVizParser;
+import com.github.sdankbar.qml.models.AbstractJQMLMapModel.PutMode;
 import com.github.sdankbar.qml.models.list.JQMLListModel;
 import com.github.sdankbar.qml.models.singleton.JQMLSingletonModel;
 import com.google.common.base.Preconditions;
@@ -70,7 +71,7 @@ import com.google.common.collect.ImmutableSet;
  * are in the EdgeKey Enum.
  *
  * @param <K> User define key/role type. toString() of type must return valid
- *        QML identifiers.
+ *            QML identifiers.
  */
 public class GraphModel<K> {
 
@@ -95,7 +96,7 @@ public class GraphModel<K> {
 	 */
 	public static <T extends Enum<T>> GraphModel<T> create(final String modelPrefix, final JQMLModelFactory factory,
 			final Class<T> keyClass, final double dpi) {
-		final ImmutableSet<String> userKeys = EnumSet.allOf(keyClass).stream().map(e -> e.name())
+		final ImmutableSet<String> userKeys = EnumSet.allOf(keyClass).stream().map(Enum::name)
 				.collect(ImmutableSet.toImmutableSet());
 		return new GraphModel<>(modelPrefix, factory, userKeys, dpi);
 	}
@@ -115,7 +116,7 @@ public class GraphModel<K> {
 	 */
 	public static <T> GraphModel<T> create(final String modelPrefix, final JQMLModelFactory factory,
 			final ImmutableSet<T> keySet, final double dpi) {
-		final ImmutableSet<String> stringKeySet = keySet.stream().map(k -> k.toString())
+		final ImmutableSet<String> stringKeySet = keySet.stream().map(Object::toString)
 				.collect(ImmutableSet.toImmutableSet());
 		return new GraphModel<>(modelPrefix, factory, stringKeySet, dpi);
 	}
@@ -177,18 +178,18 @@ public class GraphModel<K> {
 		Objects.requireNonNull(factory, "factory is null");
 		this.dpi = dpi;
 
-		singletonModel = factory.createSingletonModel(modelPrefix + "_graph", GraphKey.class);
+		singletonModel = factory.createSingletonModel(modelPrefix + "_graph", GraphKey.class, PutMode.RETURN_NULL);
 		singletonModel.put(GraphKey.width, new JVariant(dpi));
 		singletonModel.put(GraphKey.height, new JVariant(dpi));
 
-		final ImmutableSet<String> builtInKeys = EnumSet.allOf(VertexKey.class).stream().map(e -> e.name())
+		final ImmutableSet<String> builtInKeys = EnumSet.allOf(VertexKey.class).stream().map(VertexKey::name)
 				.collect(ImmutableSet.toImmutableSet());
 
 		final Set<String> keys = new HashSet<>();
 		keys.addAll(builtInKeys);
 		keys.addAll(userKeys);
-		vertexModel = factory.createListModel(modelPrefix + "_vertices", keys);
-		edgeModel = factory.createListModel(modelPrefix + "_edges", EdgeKey.class);
+		vertexModel = factory.createListModel(modelPrefix + "_vertices", keys, PutMode.RETURN_NULL);
+		edgeModel = factory.createListModel(modelPrefix + "_edges", EdgeKey.class, PutMode.RETURN_NULL);
 	}
 
 	private void applyGraphVizOutput(final GraphVizParser parser) {
