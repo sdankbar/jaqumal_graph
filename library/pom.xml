@@ -30,7 +30,7 @@
 	<parent>
 		<groupId>com.github.sdankbar.jaqumal_graph</groupId>
 		<artifactId>parent</artifactId>
-		<version>0.5-SNAPSHOT</version>
+		<version>0.5.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>library</artifactId>
 	<packaging>jar</packaging>
@@ -39,6 +39,7 @@
 		<dependency>
 			<groupId>com.github.sdankbar.jaqumal</groupId>
 			<artifactId>library</artifactId>
+			<classifier>${os.classifier}</classifier>
 		</dependency>
 		<dependency>
 			<groupId>com.google.guava</groupId>
@@ -54,5 +55,18 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<classifier>${os.classifier}</classifier>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

@@ -29,7 +29,7 @@
 
 	<groupId>com.github.sdankbar.jaqumal_graph</groupId>
 	<artifactId>parent</artifactId>
-	<version>0.5-SNAPSHOT</version>
+	<version>0.5.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>Jaqumal Graph</name>
@@ -56,7 +56,7 @@
 
 		<guava.version>28.0-jre</guava.version>
 
-		<jaqumal.version>0.5-SNAPSHOT</jaqumal.version>
+		<jaqumal.version>0.5.1-SNAPSHOT</jaqumal.version>
 
 		<log4j.version>2.12.0</log4j.version>
 		<junit.version>4.12</junit.version>
@@ -71,6 +71,7 @@
 				<groupId>com.github.sdankbar.jaqumal</groupId>
 				<artifactId>library</artifactId>
 				<version>${jaqumal.version}</version>
+				<classifier>${os.classifier}</classifier>
 			</dependency>
 			<dependency>
 				<groupId>com.google.guava</groupId>
@@ -134,4 +135,30 @@
 			</plugin>
 		</plugins>
 	</build>
+	
+	<profiles>
+		<profile>
+			<id>Build-Linux-64bit</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<os>
+					<family>Linux</family>
+				</os>
+			</activation>
+			<properties>
+                <os.classifier>linux</os.classifier>
+            </properties>
+		</profile>
+		<profile>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+				<os>
+					<family>windows</family>
+				</os>
+			</activation>
+			<properties>
+                <os.classifier>windows</os.classifier>
+            </properties>
+		</profile>
+	</profiles>
 </project>
