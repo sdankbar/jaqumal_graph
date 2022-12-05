@@ -30,7 +30,7 @@
 	<parent>
 		<groupId>com.github.sdankbar.jaqumal_graph</groupId>
 		<artifactId>parent</artifactId>
-		<version>0.5.2-SNAPSHOT</version>
+		<version>0.5.3</version>
 	</parent>
 	<artifactId>examples</artifactId>
 	<packaging>pom</packaging>

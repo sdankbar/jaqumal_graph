@@ -29,7 +29,7 @@
 
 	<groupId>com.github.sdankbar.jaqumal_graph</groupId>
 	<artifactId>parent</artifactId>
-	<version>0.5.2-SNAPSHOT</version>
+	<version>0.5.3</version>
 	<packaging>pom</packaging>
 
 	<name>Jaqumal Graph</name>
@@ -56,7 +56,7 @@
 
 		<guava.version>28.0-jre</guava.version>
 
-		<jaqumal.version>0.5.2-SNAPSHOT</jaqumal.version>
+		<jaqumal.version>0.5.3</jaqumal.version>
 
 		<log4j.version>2.12.4</log4j.version>
 		<junit.version>4.12</junit.version>
@@ -69,7 +69,7 @@
 		<dependencies>
 			<dependency>
 				<groupId>com.github.sdankbar.jaqumal</groupId>
-				<artifactId>library</artifactId>
+				<artifactId>library_jaqumal</artifactId>
 				<version>${jaqumal.version}</version>
 				<classifier>${os.classifier}</classifier>
 			</dependency>

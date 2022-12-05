@@ -29,7 +29,7 @@ Then add the following to pom.xml to be able to use Jaqumal Graph.
 ```
 <dependency>
 	<groupId>com.github.sdankbar.jaqumal_graph</groupId>
-	<artifactId>library</artifactId>
+	<artifactId>library_graph</artifactId>
 	<version>${current.version}</version>
 </dependency>
 ```
